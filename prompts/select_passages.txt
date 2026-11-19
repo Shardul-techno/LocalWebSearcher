@@ -1,0 +1,5 @@
+Choose passage IDs that directly support an answer to the question. Return only IDS: numbers or IDS: NONE.
+Question: {question}
+Passages:
+{passages}
+Example: IDS: 3, 7

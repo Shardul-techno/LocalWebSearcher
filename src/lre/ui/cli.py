@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 
 from lre.settings.loader import load_settings
+from lre.app.doctor import check_model
 
 
 def main() -> int:
@@ -12,5 +13,9 @@ def main() -> int:
     settings = load_settings(root / "config")
     profile = settings.active_model
     print(f"Configuration OK; model profile {settings.values['llm']['active_model']} ({profile['model']}).")
-    print("Local model and search-provider checks will be added in their milestones.")
+    if profile.get("backend") == "ollama":
+        ready, message = check_model(profile)
+        print(message)
+        if not ready:
+            print("Search-provider check will be added in M3.")
     return 0

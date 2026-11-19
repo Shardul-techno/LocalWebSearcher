@@ -3,12 +3,13 @@
 ## Done
 - M0 scaffold and typed TOML loader.
 - M1 exact passage slices, BM25, hash verification and text-fragment links.
+- M2 Ollama/OpenAI-compatible adapters, fake backend and tolerant output parsing.
 
 ## In progress
-- M2 local LLM adapters and tolerant parsing.
+- M3 search and bounded page fetching.
 
 ## Next
-- Continue M2, then search/fetch, bounded agent loop and CLI through M5.
+- Continue M3, then the agent loop and CLI through M5.
 
 ## Known issues
 - Search/fetch, agent loop, persistence, CLI research and Tk UI are not implemented yet.

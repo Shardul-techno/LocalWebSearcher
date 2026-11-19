@@ -1,0 +1,5 @@
+Can the selected passages answer the question? Return one line: VERDICT: SUFFICIENT or VERDICT: INSUFFICIENT | GAP: short missing detail.
+Question: {question}
+Passages:
+{passages}
+Example: VERDICT: INSUFFICIENT | GAP: a current benchmark

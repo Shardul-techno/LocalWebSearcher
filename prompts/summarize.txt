@@ -1,0 +1,5 @@
+Write at most {max_sentences} short sentences using only these passages. Cite each claim with passage IDs like [3].
+Question: {question}
+Passages:
+{passages}
+Example: The study reports a 12% increase [3].

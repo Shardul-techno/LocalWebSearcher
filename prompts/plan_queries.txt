@@ -1,0 +1,6 @@
+Write up to {limit} short web search queries for this question. Return one query per line.
+Question: {question}
+Missing information: {gap}
+Example:
+solar panel efficiency 2025
+solar panel degradation rate
