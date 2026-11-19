@@ -2,12 +2,13 @@
 
 ## Done
 - M0 scaffold and typed TOML loader.
+- M1 exact passage slices, BM25, hash verification and text-fragment links.
 
 ## In progress
-- M1 passage layer.
+- M2 local LLM adapters and tolerant parsing.
 
 ## Next
-- Finish M1, then M2 local LLM adapters and tolerant parsing.
+- Continue M2, then search/fetch, bounded agent loop and CLI through M5.
 
 ## Known issues
 - Search/fetch, agent loop, persistence, CLI research and Tk UI are not implemented yet.

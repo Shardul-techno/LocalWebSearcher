@@ -1,8 +1,10 @@
 .venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
 data/**
+!data/
 !data/.stignore.example
 logs/**
 config/user.toml
