@@ -12,6 +12,7 @@ from lre.search.wikipedia import WikipediaProvider
 from lre.settings.loader import load_settings
 from lre.storage.file_store import FileRunStore
 from lre.app.render import RenderedRun, render
+from lre.app.preferences import set_data_directory
 
 
 class ResearchService:
@@ -54,6 +55,14 @@ class ResearchService:
 
     def projects(self) -> list[str]:
         return self.store.list_projects()
+
+    def model_ready(self) -> tuple[bool, str]:
+        from lre.app.doctor import check_model
+        model_name = self.settings.values["llm"]["active_model"]
+        return check_model(self.settings.models[model_name])
+
+    def set_data_directory(self, data_dir: Path) -> None:
+        set_data_directory(self.project_root / "config", data_dir)
 
     def doctor(self) -> list[tuple[str, bool, str]]:
         from lre.app.doctor import check_model
