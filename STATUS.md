@@ -15,7 +15,7 @@
 - M6 minimal Tkinter UI, then run a live research query and record model timing.
 
 ## Known issues
-- Search/fetch, agent loop, persistence, CLI research and Tk UI are not implemented yet.
+- Tk UI is not implemented yet; it is the M6 step.
 - The 0.8B model may struggle with query planning and summaries; BM25 fallback remains essential.
 - Android is a future target; this phase only keeps core logic portable.
 - Live model/search timing was not measurable here: Ollama is unreachable and network search fails in this environment.
