@@ -5,12 +5,13 @@
 - M1 exact passage slices, BM25, hash verification and text-fragment links.
 - M2 Ollama/OpenAI-compatible adapters, fake backend and tolerant output parsing.
 - M3 DDGS/Wikipedia search adapters, SSRF-aware bounded fetcher, extraction and cache.
+- M4 bounded multi-round loop with cancellation, traces, validated IDs and BM25 fallback.
 
 ## In progress
-- M4 bounded agent loop and offline end-to-end tests.
+- M5 immutable run storage, render/service facade and CLI.
 
 ## Next
-- Continue M4, then immutable storage, app facade and CLI through M5.
+- Finish M5 with a local-model/search run when those services are available.
 
 ## Known issues
 - Search/fetch, agent loop, persistence, CLI research and Tk UI are not implemented yet.

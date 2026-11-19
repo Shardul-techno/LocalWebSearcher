@@ -63,3 +63,20 @@ class TraceStep:
     started_at: str
     duration_ms: int
     info: dict[str, object] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class Run:
+    schema_version: int
+    run_id: str
+    project: str
+    question: str
+    mode: str
+    model_profile: str
+    created_at: str
+    settings_digest: str
+    sources: tuple[SourceDoc, ...]
+    passages: tuple[Passage, ...]
+    selection: Selection
+    answer: Answer
+    trace: tuple[TraceStep, ...]
