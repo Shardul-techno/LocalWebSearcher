@@ -55,6 +55,8 @@ def test_service_ask_save_and_show_offline(tmp_path, monkeypatch):
     root = tmp_path / "project"
     shutil.copytree("config", root / "config")
     shutil.copytree("prompts", root / "prompts")
+    default = root / "config" / "default.toml"
+    default.write_text(default.read_text(encoding="utf-8").replace('active_model = "managed-local"', 'active_model = "qwen-small"'), encoding="utf-8")
     search = FakeSearchProvider([SearchHit("Trial report", "https://example.org/trial")])
     monkeypatch.setattr(service_module, "DuckDuckGoProvider", lambda *args: search)
     monkeypatch.setattr(service_module, "build_backend", lambda profile: FakeBackend([

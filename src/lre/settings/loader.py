@@ -15,10 +15,10 @@ def _merge(base: dict[str, Any], extra: dict[str, Any]) -> dict[str, Any]:
     return merged
 
 
-def load_settings(config_dir: Path) -> Settings:
+def load_settings(config_dir: Path, user_file: Path | None = None) -> Settings:
     with (config_dir / "default.toml").open("rb") as handle:
         values = tomllib.load(handle)
-    user_file = config_dir / "user.toml"
+    user_file = user_file or config_dir / "user.toml"
     if user_file.exists():
         with user_file.open("rb") as handle:
             values = _merge(values, tomllib.load(handle))

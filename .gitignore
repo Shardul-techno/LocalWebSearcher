@@ -9,3 +9,6 @@ data/**
 !data/.stignore.example
 logs/**
 config/user.toml
+models/
+bin/
+dist/

@@ -8,18 +8,22 @@
 - M4 bounded multi-round loop with cancellation, traces, validated IDs and BM25 fallback.
 - M5 immutable JSON storage, verified rendering, service facade and CLI commands.
 - M6 Tkinter desktop UI with worker-thread research, history and clickable quotes.
+- M7 portable paths, reproducible setup, model catalog/manager, managed llama-server integration and offline selftest.
 
 ## In progress
-- Stage 1 installability work: portable paths, model manager and packaged runtime.
+- M8 packaging and CI.
 
 ## Next
-- Finish M7 and M8, then run a live research query and record model timing.
+- Finish M8, then run a live research query and record model timing.
 
 ## Known issues
 - The UI cannot perform live research until a local model is configured and web access is available.
 - The 0.8B model may struggle with query planning and summaries; BM25 fallback remains essential.
 - Android is a future target; this phase only keeps core logic portable.
 - Live model/search timing was not measurable here: Ollama is unreachable and network search fails in this environment.
+
+## Unverified
+- SHA-256 values for the catalog GGUF files; the app computes and requires confirmation before use.
 
 ## Decisions needing the owner
 - None.

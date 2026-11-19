@@ -1,11 +1,11 @@
 [app]
-data_dir = "data"
+data_dir = "auto"
 log_dir = "logs"
 default_project = "inbox"
 language = "en"
 
 [llm]
-active_model = "qwen-small"
+active_model = "managed-local"
 
 [search]
 provider = "ddg"

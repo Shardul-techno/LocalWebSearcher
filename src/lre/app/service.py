@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 from typing import Callable
 
 from lre.agent.loop import ResearchContext, research
@@ -6,24 +7,30 @@ from lre.core.events import Event
 from lre.fetch.extract import TrafilaturaExtractor
 from lre.fetch.fetcher import PageFetcher
 from lre.llm.registry import build_backend
+from lre.llm.managed_server import ManagedServer
+from lre.llm.model_manager import ModelManager
 from lre.passages.ranker import BM25
 from lre.search.ddg import DuckDuckGoProvider
 from lre.search.wikipedia import WikipediaProvider
 from lre.settings.loader import load_settings
+from lre.settings.paths import resolve_paths
 from lre.storage.file_store import FileRunStore
 from lre.app.render import RenderedRun, render
-from lre.app.preferences import set_data_directory
+from lre.app.preferences import set_active_model, set_data_directory
 
 
 class ResearchService:
     def __init__(self, project_root: Path | None = None):
-        self.project_root = project_root or Path(__file__).resolve().parents[3]
-        self.settings = load_settings(self.project_root / "config")
+        self.project_root = project_root or Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[3]))
+        self.paths = resolve_paths(self.project_root)
+        self.settings = load_settings(self.project_root / "config", self.paths.user_config)
         app = self.settings.section("app")
-        self.data_dir = Path(app["data_dir"])
+        self.data_dir = self.paths.data_dir if app["data_dir"] == "auto" else Path(app["data_dir"])
         if not self.data_dir.is_absolute():
             self.data_dir = self.project_root / self.data_dir
         self.store = FileRunStore(self.data_dir)
+        self.model_manager = ModelManager(self.paths.models_dir, self.project_root / "config" / "model_catalog.toml")
+        self.managed_server: ManagedServer | None = None
 
     def ask(self, question: str, project: str | None = None, mode: str | None = None, style: str = "focused", model_profile: str | None = None, cancel=None, on_event: Callable[[Event], None] | None = None):
         values = dict(self.settings.values)
@@ -31,7 +38,11 @@ class ResearchService:
         if model_profile:
             values["llm"]["active_model"] = model_profile
         model_name = values["llm"]["active_model"]
-        profile = self.settings.models[model_name]
+        profile = dict(self.settings.models[model_name])
+        if profile["backend"] == "llamacpp_managed":
+            model_path = self.model_manager.active_path()
+            self.managed_server = self.managed_server or ManagedServer(self.project_root / "bin" / "llama-server.exe", model_path or Path(), self.paths.log_dir, profile["num_ctx"], profile["threads"])
+            profile["base_url"] = self.managed_server.start()
         search_cfg = values["search"]
         if search_cfg["provider"] == "ddg":
             search = DuckDuckGoProvider(search_cfg["region"], search_cfg["safe_search"])
@@ -59,10 +70,31 @@ class ResearchService:
     def model_ready(self) -> tuple[bool, str]:
         from lre.app.doctor import check_model
         model_name = self.settings.values["llm"]["active_model"]
-        return check_model(self.settings.models[model_name])
+        profile = self.settings.models[model_name]
+        if profile["backend"] == "llamacpp_managed":
+            if not self.model_manager.active_path():
+                return False, "No managed model is selected. Open Models… to install one."
+            if not (self.project_root / "bin" / "llama-server.exe").is_file():
+                return False, "llama-server.exe is missing. Run scripts\\fetch_llama_server.ps1 after its checksum is verified."
+            return True, "Managed model is ready to start."
+        return check_model(profile)
 
     def set_data_directory(self, data_dir: Path) -> None:
-        set_data_directory(self.project_root / "config", data_dir)
+        set_data_directory(self.paths.user_config, data_dir)
+
+    def models(self) -> list[dict]:
+        return self.model_manager.list()
+
+    def install_model(self, model_id: str, progress=None, cancel=None, confirm_hash=None) -> Path:
+        return self.model_manager.install(model_id, progress, cancel, confirm_hash)
+
+    def use_model(self, model_id: str, confirm_unverified: bool = False) -> Path:
+        path = self.model_manager.set_active(model_id, confirm_unverified)
+        set_active_model(self.paths.user_config, "managed-local")
+        return path
+
+    def remove_model(self, model_id: str) -> None:
+        self.model_manager.remove(model_id)
 
     def doctor(self) -> list[tuple[str, bool, str]]:
         from lre.app.doctor import check_model

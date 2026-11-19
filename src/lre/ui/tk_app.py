@@ -119,6 +119,12 @@ class ResearchWindow:
                     self.reload_projects()
                     self.reload_history()
                     self.finish()
+                elif kind == "model-progress":
+                    done, total = value
+                    self.progress.set(f"Downloading model: {done // 1_000_000}/{total // 1_000_000} MB")
+                elif kind == "model-installed":
+                    self.progress.set(f"Model installed: {value}. Select it in Models…")
+                    self.reload_models()
                 else:
                     self.progress.set(f"Could not run research: {value}")
                     self.finish()
@@ -163,7 +169,61 @@ class ResearchWindow:
             messagebox.showinfo("Data folder", "Saved. Restart Local Research to use the new folder.")
 
     def models_dialog(self) -> None:
-        messagebox.showinfo("Models", "Model manager arrives in M7.")
+        self.model_window = tk.Toplevel(self.root)
+        self.model_window.title("Models")
+        self.model_list = tk.Listbox(self.model_window, width=70)
+        self.model_list.pack(fill="both", expand=True, padx=10, pady=10)
+        buttons = ttk.Frame(self.model_window, padding=(10, 0, 10, 10))
+        buttons.pack(fill="x")
+        ttk.Button(buttons, text="Install", command=self.install_selected_model).pack(side="left")
+        ttk.Button(buttons, text="Use", command=self.use_selected_model).pack(side="left", padx=6)
+        ttk.Button(buttons, text="Remove", command=self.remove_selected_model).pack(side="left")
+        self.reload_models()
+
+    def reload_models(self) -> None:
+        if not hasattr(self, "model_list") or not self.model_list.winfo_exists():
+            return
+        self.model_catalog = self.service.models()
+        self.model_list.delete(0, tk.END)
+        for model in self.model_catalog:
+            installed = "installed" if model["installed"] else "available"
+            self.model_list.insert(tk.END, f"{model['name']} ({model['size_bytes'] // 1_000_000} MB, {installed})")
+
+    def selected_model(self) -> dict | None:
+        selected = self.model_list.curselection()
+        return self.model_catalog[selected[0]] if selected else None
+
+    def install_selected_model(self) -> None:
+        model = self.selected_model()
+        if not model:
+            return
+        self.progress.set("Starting model download…")
+        def download() -> None:
+            try:
+                path = self.service.install_model(model["id"], lambda done, total: self.events.put(("model-progress", (done, total))))
+                self.events.put(("model-installed", path.name))
+            except Exception as exc:
+                self.events.put(("error", f"Model install failed: {exc}"))
+        threading.Thread(target=download, daemon=True).start()
+
+    def use_selected_model(self) -> None:
+        model = self.selected_model()
+        if not model:
+            return
+        try:
+            self.service.use_model(model["id"], messagebox.askyesno("Confirm model hash", "Confirm the displayed SHA-256 before using this unverified model."))
+            self.progress.set("Model selected. Restart Local Research to apply it.")
+        except Exception as exc:
+            messagebox.showerror("Models", str(exc))
+
+    def remove_selected_model(self) -> None:
+        model = self.selected_model()
+        if model and messagebox.askyesno("Remove model", f"Remove {model['name']}?"):
+            try:
+                self.service.remove_model(model["id"])
+                self.reload_models()
+            except Exception as exc:
+                messagebox.showerror("Models", str(exc))
 
 
 def main() -> None:

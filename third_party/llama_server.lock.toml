@@ -1,0 +1,4 @@
+tag = "b12248"
+asset = "llama-b12248-bin-win-cpu-x64.zip"
+url = "https://github.com/ggml-org/llama.cpp/releases/download/b12248/llama-b12248-bin-win-cpu-x64.zip"
+sha256 = "bb306bfd390f8782c0acaba490505d12f07392791b48f1dd039387a5bacf1181"

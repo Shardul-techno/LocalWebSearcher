@@ -9,6 +9,6 @@ def build_backend(profile: dict[str, Any]) -> LLMBackend:
     backend = profile["backend"]
     if backend == "ollama":
         return OllamaBackend(profile)
-    if backend == "openai_compat":
+    if backend in {"openai_compat", "llamacpp_managed"}:
         return OpenAICompatBackend(profile)
     raise ValueError(f"Unsupported LLM backend: {backend}")

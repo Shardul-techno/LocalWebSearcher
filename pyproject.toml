@@ -1,19 +1,19 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools==80.9.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "lre"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Passage-first local web research"
 requires-python = ">=3.11"
 dependencies = ["httpx>=0.27", "trafilatura>=1.12", "ddgs>=9"]
 
-[project.optional-dependencies]
-dev = ["pytest>=8"]
-
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "lre._version.__version__"}
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

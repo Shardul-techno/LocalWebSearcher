@@ -1,0 +1,27 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
+      - shell: pwsh
+        run: choco install innosetup -y --no-progress
+      - shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1
+      - name: Create GitHub release and attach artifacts
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create $env:GITHUB_REF_NAME dist/LocalResearch-Setup-*.exe dist/LocalResearch-*-portable.zip dist/SHA256SUMS.txt --generate-notes
