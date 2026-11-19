@@ -1,0 +1,2 @@
+[llm]
+active_model = "qwen-small"

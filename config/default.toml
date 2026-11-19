@@ -1,0 +1,64 @@
+[app]
+data_dir = "data"
+log_dir = "logs"
+default_project = "inbox"
+language = "en"
+
+[llm]
+active_model = "qwen-small"
+
+[search]
+provider = "ddg"
+results_per_query = 5
+region = "wt-wt"
+safe_search = "moderate"
+
+[fetch]
+timeout_seconds = 15
+max_bytes = 2000000
+max_pages_per_round = 4
+workers = 4
+user_agent = "lre/0.1 (local research tool)"
+block_private_ips = true
+respect_robots_txt = true
+
+[passages]
+target_chars = 400
+max_chars = 700
+overlap_sentences = 1
+min_chars = 80
+top_k_to_model = 12
+max_chars_per_passage_in_prompt = 500
+stop_words = ["a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "in", "is", "it", "of", "on", "or", "that", "the", "to", "was", "were", "with"]
+k1 = 1.5
+b = 0.75
+
+[agent]
+default_mode = "search"
+max_llm_calls_per_run = 20
+stop_on_sufficient = true
+
+[agent.modes.simple]
+rounds = 1
+queries_per_round = 1
+pages_per_round = 3
+
+[agent.modes.search]
+rounds = 2
+queries_per_round = 2
+pages_per_round = 4
+
+[agent.modes.deep]
+rounds = 4
+queries_per_round = 3
+pages_per_round = 5
+
+[agent.styles.focused]
+top_k_to_model = 8
+
+[agent.styles.broad]
+top_k_to_model = 16
+
+[output]
+max_quotes = 8
+max_summary_sentences = 3
