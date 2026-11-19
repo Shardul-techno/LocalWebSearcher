@@ -2,7 +2,7 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-from lre.settings.schema import Settings
+from lre.settings.schema import Settings, make_typed
 
 
 def _merge(base: dict[str, Any], extra: dict[str, Any]) -> dict[str, Any]:
@@ -26,4 +26,5 @@ def load_settings(config_dir: Path) -> Settings:
         models = tomllib.load(handle)
     if values["llm"]["active_model"] not in models:
         raise ValueError(f"Unknown active model profile: {values['llm']['active_model']}")
-    return Settings(values, models)
+    typed = make_typed(values)
+    return Settings(values, models, typed)

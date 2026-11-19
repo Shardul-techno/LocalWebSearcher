@@ -13,8 +13,6 @@ httpx==0.28.1
 idna==3.20
 iniconfig==2.3.1
 jusText==3.0.2
-# Editable Git install with no remote (lre==0.1.0)
--e c:\users\shard\.codex\.chatgpt-projects\g-p-6a6ec77fed1081919282995d2245c535
 lxml==6.1.3
 lxml_html_clean==0.4.6
 packaging==26.3

@@ -4,10 +4,12 @@ import re
 import threading
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
+from urllib.parse import urlsplit, urlunsplit
 
 from lre.agent.parsing import parse_ids, parse_judgment, parse_queries
 from lre.agent.prompts import PromptLibrary
@@ -29,6 +31,11 @@ class ResearchContext:
 
 def _utc() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _normalized_url(url: str) -> str:
+    parts = urlsplit(url)
+    return urlunsplit((parts.scheme.lower(), parts.netloc.lower(), parts.path, parts.query, ""))
 
 
 def research(context: ResearchContext, question: str, project: str = "inbox", mode: str = "search", style: str = "focused", cancel: threading.Event | None = None, on_event: Callable[[Event], None] | None = None) -> Run:
@@ -81,30 +88,48 @@ def research(context: ResearchContext, question: str, project: str = "inbox", mo
                 hits.extend(context.search.search(query, cfg["search"]["results_per_query"]))
             except Exception as exc:
                 trace.append(TraceStep("search", _utc(), int((time.monotonic() - started) * 1000), {"error": type(exc).__name__}))
-        seen_urls = {source.url for source in sources}
+        seen_urls = {_normalized_url(source.url) for source in sources}
         unique_hits = []
         for hit in hits:
-            if hit.url not in seen_urls:
-                seen_urls.add(hit.url)
+            normalized = _normalized_url(hit.url)
+            if normalized not in seen_urls:
+                seen_urls.add(normalized)
                 unique_hits.append(hit)
-        top_hits = unique_hits[:mode_cfg["pages_per_round"]]
-        for hit in top_hits:
-            if cancel.is_set():
-                break
+        page_limit = min(mode_cfg["pages_per_round"], cfg["fetch"]["max_pages_per_round"])
+        top_hits = unique_hits[:page_limit]
+
+        def fetch_page(hit):
             started = time.monotonic()
             try:
-                page_text, digest = context.fetch.fetch(hit.url)
-                doc_id = digest[:16]
-                source = SourceDoc(doc_id, hit.url, hit.title, _utc(), digest)
-                sources.append(source)
-                slices = split(page_text, SplitConfig(p_cfg["target_chars"], p_cfg["max_chars"], p_cfg["min_chars"], p_cfg["overlap_sentences"]))
-                new = [Passage(temporary_pid - i, doc_id, part.text, part.start, part.end, page_hash(page_text)) for i, part in enumerate(slices)]
-                temporary_pid -= len(new)
-                candidates.extend(new)
-                trace.append(TraceStep("fetch_passages", _utc(), int((time.monotonic() - started) * 1000), {"url": hit.url, "passages": len(new)}))
+                return context.fetch.fetch(hit.url), None, started
             except Exception as exc:
-                sources.append(SourceDoc(uuid.uuid4().hex[:16], hit.url, hit.title, _utc(), "", "error", type(exc).__name__))
-                trace.append(TraceStep("fetch", _utc(), int((time.monotonic() - started) * 1000), {"url": hit.url, "error": type(exc).__name__}))
+                return None, type(exc).__name__, started
+
+        if top_hits and not cancel.is_set():
+            worker_count = min(cfg["fetch"]["workers"], len(top_hits))
+            with ThreadPoolExecutor(max_workers=max(1, worker_count)) as pool:
+                futures = [pool.submit(fetch_page, hit) for hit in top_hits]
+                for hit, future in zip(top_hits, futures):
+                    if cancel.is_set():
+                        break
+                    result, error, started = future.result()
+                    if error:
+                        sources.append(SourceDoc(uuid.uuid4().hex[:16], hit.url, hit.title, _utc(), "", "error", error))
+                        trace.append(TraceStep("fetch", _utc(), int((time.monotonic() - started) * 1000), {"url": hit.url, "error": error}))
+                        continue
+                    try:
+                        page_text, digest = result
+                        doc_id = digest[:16]
+                        source = SourceDoc(doc_id, hit.url, hit.title, _utc(), page_hash(page_text))
+                        sources.append(source)
+                        slices = split(page_text, SplitConfig(p_cfg["target_chars"], p_cfg["max_chars"], p_cfg["min_chars"], p_cfg["overlap_sentences"]))
+                        new = [Passage(temporary_pid - i, doc_id, part.text, part.start, part.end, page_hash(page_text)) for i, part in enumerate(slices)]
+                        temporary_pid -= len(new)
+                        candidates.extend(new)
+                        trace.append(TraceStep("fetch_passages", _utc(), int((time.monotonic() - started) * 1000), {"url": hit.url, "passages": len(new)}))
+                    except Exception as exc:
+                        sources.append(SourceDoc(uuid.uuid4().hex[:16], hit.url, hit.title, _utc(), "", "error", type(exc).__name__))
+                        trace.append(TraceStep("fetch", _utc(), int((time.monotonic() - started) * 1000), {"url": hit.url, "error": type(exc).__name__}))
         style_top_k = cfg["agent"]["styles"][style]["top_k_to_model"]
         ranked = context.ranker.rank(question, passages + candidates, style_top_k)
         visible = [item for item in ranked if item.passage.pid not in shown_ids]

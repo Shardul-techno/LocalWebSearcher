@@ -7,6 +7,10 @@ import httpx
 from lre.fetch.safety import validate_url
 
 
+def cache_key(url: str) -> str:
+    return hashlib.sha256(url.encode("utf-8")).hexdigest()
+
+
 class PageFetcher:
     def __init__(self, extractor, cache_dir: Path, timeout_seconds: float = 15, max_bytes: int = 2_000_000, user_agent: str = "lre/0.1", block_private: bool = True, respect_robots: bool = True):
         self.extractor = extractor
@@ -18,7 +22,7 @@ class PageFetcher:
         self.respect_robots = respect_robots
 
     def fetch(self, url: str) -> tuple[str, str]:
-        key = hashlib.sha256(url.encode("utf-8")).hexdigest()
+        key = cache_key(url)
         cache_file = self.cache_dir / f"{key}.txt"
         if cache_file.exists():
             return cache_file.read_text(encoding="utf-8"), key

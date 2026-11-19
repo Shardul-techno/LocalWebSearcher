@@ -1,3 +1,3 @@
-param([string]$Command = "doctor")
+param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments = @("doctor"))
 $ErrorActionPreference = "Stop"
-& .\.venv\Scripts\python.exe -m lre $Command
+& .\.venv\Scripts\python.exe -m lre @Arguments

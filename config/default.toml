@@ -28,7 +28,7 @@ max_chars = 700
 overlap_sentences = 1
 min_chars = 80
 top_k_to_model = 12
-max_chars_per_passage_in_prompt = 500
+max_chars_per_passage_in_prompt = 200
 stop_words = ["a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "in", "is", "it", "of", "on", "or", "that", "the", "to", "was", "were", "with"]
 k1 = 1.5
 b = 0.75
@@ -54,10 +54,10 @@ queries_per_round = 3
 pages_per_round = 5
 
 [agent.styles.focused]
-top_k_to_model = 8
+top_k_to_model = 4
 
 [agent.styles.broad]
-top_k_to_model = 16
+top_k_to_model = 8
 
 [output]
 max_quotes = 8
