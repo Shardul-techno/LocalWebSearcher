@@ -17,4 +17,5 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+addopts = ["-m", "not integration"]
 markers = ["integration: requires network access"]

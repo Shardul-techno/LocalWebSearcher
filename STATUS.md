@@ -4,12 +4,13 @@
 - M0 scaffold and typed TOML loader.
 - M1 exact passage slices, BM25, hash verification and text-fragment links.
 - M2 Ollama/OpenAI-compatible adapters, fake backend and tolerant output parsing.
+- M3 DDGS/Wikipedia search adapters, SSRF-aware bounded fetcher, extraction and cache.
 
 ## In progress
-- M3 search and bounded page fetching.
+- M4 bounded agent loop and offline end-to-end tests.
 
 ## Next
-- Continue M3, then the agent loop and CLI through M5.
+- Continue M4, then immutable storage, app facade and CLI through M5.
 
 ## Known issues
 - Search/fetch, agent loop, persistence, CLI research and Tk UI are not implemented yet.
