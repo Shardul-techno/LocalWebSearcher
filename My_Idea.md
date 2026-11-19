@@ -1,6 +1,6 @@
 # This file highlights what the final project is going to be and what the priorities are; it does not highlight the intermediate steps and milestones.
 
-# Requirements
+## Requirements
 1. The architecture needs to be modular. I should be able to easily take out a piece and use it elsewhere
 2. There should be enough compatibility with at least Windows 11 and Android 15 that I will not need too large an update to fit a higher version for core functionality
 3. There will be two models, one on my phone and one on my laptop
@@ -24,67 +24,78 @@
 	2. That opens messages, settings, history, usage data; nothing leaves my computer.
 	3. Whereas Network privacy, where browser cookies, caches, and history are concerned, can be tolerated
 	4. No restrictions on what I can do with it
- 	5. No mandatory cloud AI service.
+ 	6. No mandatory cloud AI service.
 	6. Offline-capable interface and local history, with internet required only for online research.
-6. I don't want to keep my laptop on as a server. I want both my phone and laptop to be independent but coordinating.
-7. UI
+7. I don't want to keep my laptop on as a server. I want both my phone and laptop to be independent but coordinating.
+8. UI
 	1. I want a proper separate window and app as a UI
 	2. I want a clean, minimalistic, less cognitively triggering UI
-8. Very lightweight:
+9. Very lightweight:
 	1. I don't want an OpenWebUI-based UI due to the Docker bloat
 	2. I want to remove the need to run Docker in the background
 	3. Reuse existing architecture whenever possible.
 	4. The running and storage cost in terms of hardware should be minimal; check device specifications above to confirm
-9. Chat will be synced on login, whenever wifi is available. I have experience with Syncthing and a Syncthing Android fork.
-10. No unnecessarily complex infrastructure
-# Idea:
+10. Chat will be synced on login, whenever wifi is available. I have experience with Syncthing and a Syncthing Android fork.
+11. No unnecessarily complex infrastructure
+    
+## Idea:
 - Summary:
 	1. It will be a simple, small, lightweight, free, agentic model.
 	2. I want a web search system that takes the strengths of Google search and agentic search and combines the advantages
 	3. The most important part of the project is to ensure that the information is as reliable as it can get. The main USP is that the application always displays the exact wording from relevant passages, with a link to the source website at the bottom that opens in the user's default browser.
+
 - Before prompt:
 	1. User can define how many web searches they want to do (Deep, search or simple search)
 	2. Whether the user wants deep searches (for technical topics) or broad searches (brainstorming)
 	3. User can select a profile
 	4. They can decide what initial instructions to give. The app will have several different skills; a personality is a collection of specific skills (One personality for Art, one for Programming, one for being a Good Friend...)
-- Model output:
-  1. Model understands the search and outputs tools like web searching
-  2. After a model has found the websites, the text will be extracted and then given to the model
-  3. The model then outputs a range of values (passage 1, sentence 3 to 4). Sentence meaning start to full stop.
+
+- Model working:
+  1. The model must be interchangeable with another model as pleased. More models should be possible to install within this app itself.
+  2. The model will work under an agentic loop
+  3. Model understands the search and outputs tools like web searching
+  4. After a model has found the websites, the text will be extracted and then given to the model
+  5. The model then outputs a range of values (passage 1, sentence 3 to 4). Sentence meaning start to full stop.
+     
 - Response Format:
-	1. Webpages/websites where it found the solution
-	2. A short list of literal words/sentences taken from the text, and the link to the page it took it from will be accessible by clicking on it
-	3. The quotation should not be AI-generated, but should be exact words from the excerpts
-	4. It will have a short AI summary at the end which gives the final verdict
+ 1. A short list of literal words/sentences taken from the text, and the link to the page it took it from will be accessible by clicking on it
+ 2. The quotation should not be AI-generated, but should be exact words from the excerpts
+ 3. It will have a short AI summary at the end which gives the final conclusion
+
 - Application:
 	1. Will store history, memory (optional by user)
 	2. Projects with Subfolder architecture
 	3. An interactive interface, with proper feedback, instead of a big wall of text everywhere
-	4. Manual syncing of history on both devices.
-	5. Automatic feature to sync chat history
-	6. Will have settings mentioned below
-	7. RAG for searching personal files and for searching through my history and memory
-5. Settings:
-	1. Set a slider for depth
-	2. Set a slider for focus
-	3. Select a profile
-	4. Set constraints
-	5. Select MCP server, if any
-	6. Permission limits:
-		1. Which personal files are whitelisted
-		2. Which are blacklisted
-		3. Other limits, depending on devices
-	7. Select favourite websites and search engines.
-	8. How the response should be:
-		1. Length-wise
-		2. Interactivity-wise
-		3. Graphic-wise
-		4. Other small changes
-	9. Theme changes
-	10. Colour preferences
-	11. Wallpaper
-	12. Size of window
-	13. Size of prompt bar
+	4. The model should save the history of the most commonly searched websites.
+	5. There should be a liking and disliking system, where the user can tune the model's future responses
+	6. Manual syncing of history on both devices.
+	7. Automatic feature to sync chat history
+	8. Will have settings mentioned below
+	9. RAG for searching personal files and for searching through my history and memory
+
+## Settings:
+1. Set a slider for depth
+2. Set a slider for focus
+3. Select a profile
+4. Set constraints
+5. Select MCP server, if any
+6. Permission limits:
+	1. Which personal files are whitelisted
+	2. Which are blacklisted
+	3. Other limits, depending on devices
+7. Select favourite websites and search engines.
+8. How the response should be:
+	1. Length-wise
+	2. Interactivity-wise
+	3. Graphic-wise
+	4. Other small changes 
+9. UI
+	1. Theme changes
+	2. Colour preferences
+	3. Wallpaper
+	4. Size of window
+	5. Size of prompt bar
+	6. Option to change the position of the AI summary and the prompt bar
 ## Priority:
 	1. Lightweight in terms of hardware
 	2. Needs to run moderately fast
