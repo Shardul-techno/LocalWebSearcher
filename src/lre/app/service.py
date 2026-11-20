@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import sys
 from typing import Callable
 
@@ -16,7 +17,7 @@ from lre.settings.loader import load_settings
 from lre.settings.paths import resolve_paths
 from lre.storage.file_store import FileRunStore
 from lre.app.render import RenderedRun, render
-from lre.app.preferences import migrate_storage, set_active_model, set_storage_directory
+from lre.app.preferences import migrate_legacy_layout, migrate_storage, set_active_model, set_storage_directory
 
 
 class ResearchService:
@@ -26,14 +27,24 @@ class ResearchService:
         self.settings = load_settings(self.project_root / "config", self.paths.user_config)
         app = self.settings.section("app")
         configured_root = app.get("storage_dir", "auto")
-        # Migrate the previous data-folder preference as the new unified root.
-        if configured_root == "auto" and app.get("data_dir", "auto") != "auto":
-            configured_root = app["data_dir"]
         self.storage_selection_required = configured_root == "auto"
         root = self.paths.storage_root if self.storage_selection_required else Path(configured_root).expanduser()
         if not root.is_absolute():
             root = self.project_root / root
         self._configure_storage(root)
+        if self.storage_selection_required:
+            if getattr(sys, "frozen", False):
+                if self.paths.portable:
+                    legacy_base = Path(sys.executable).parent
+                    old_data, old_models, old_logs = legacy_base / "data", legacy_base / "models", legacy_base / "logs"
+                else:
+                    old_data = Path(os.environ.get("APPDATA", self.project_root / ".appdata")) / "LocalResearch" / "data"
+                    old_models = Path(os.environ.get("LOCALAPPDATA", self.project_root / ".localappdata")) / "LocalResearch" / "models"
+                    old_logs = Path(os.environ.get("APPDATA", self.project_root / ".appdata")) / "LocalResearch" / "logs"
+            else:
+                old_data = Path(app["data_dir"]) if app.get("data_dir", "auto") != "auto" else self.project_root / "data"
+                old_models, old_logs = self.project_root / "models", self.project_root / "logs"
+            migrate_legacy_layout(old_data, old_models, old_logs, self.storage_root)
         self.managed_server: ManagedServer | None = None
 
     def ask(self, question: str, project: str | None = None, mode: str | None = None, style: str = "focused", model_profile: str | None = None, cancel=None, on_event: Callable[[Event], None] | None = None):
