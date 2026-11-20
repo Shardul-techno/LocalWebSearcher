@@ -32,6 +32,13 @@ class ResearchWindow:
                     self.service.set_storage_directory(Path(selected))
                 except Exception as exc:
                     messagebox.showerror("Storage migration failed", str(exc), parent=self.root)
+            elif not messagebox.askyesno(
+                "Use default storage?",
+                f"No folder was selected. Use the default location instead?\\n\\n{self.service.storage_root}",
+                parent=self.root,
+            ):
+                self.root.destroy()
+                return
         self.reload_projects()
         self.reload_history()
         ready, message = self.service.model_ready()
