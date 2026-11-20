@@ -112,7 +112,7 @@ The planned phone target is Android 15 on a MediaTek Dimensity 6020 with 6 GB ph
 
 - **Simple:** one round, one query and up to three pages.
 - **Search:** two rounds, up to two queries per round and up to four pages per round.
-- **Deep:** four rounds, up to three queries per round and up to five pages per round.
+- **Deep:** four rounds, up to three queries per round and up to four pages per round under the current global fetch cap.
 
 The configured global page and model-call limits still apply. These are bounded workflows, not unlimited crawling.
 
@@ -141,7 +141,7 @@ Run files are not edited in place. This is intended to make later folder-based s
 
 ### CLI
 
-The command-line interface is useful for diagnostics and model/project inspection. The following commands are smoke-tested in CI:
+The command-line interface is useful for diagnostics and model/project inspection. The following commands are included in the CI smoke checks (the latest workflow run is still pending):
 
 ```powershell
 .\.venv\Scripts\python.exe -m lre --help
@@ -244,7 +244,7 @@ For a local build, after setup and installing Inno Setup 6, run:
 powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1
 ```
 
-The expected outputs are written under `dist/`. The installer is currently unsigned.
+The expected outputs are written under the distribution folder. The installer is currently unsigned.
 
 ### Android build
 
