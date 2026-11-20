@@ -40,6 +40,7 @@
 - Shift+Enter must insert a newline while Enter submits. The current Tk prompt uses a single-line Entry, so this is not yet satisfied.
 - Broader network hardening remains: the current helper is not yet proven against the complete requested matrix (DNS failures, certificate errors, redirect loops, malformed/empty responses, offline operation, interrupted downloads, and all timeout/cancellation cases). Add tests and improve only where gaps are demonstrated.
 - Output truncation/incomplete-code detection, finish-reason preservation, controlled continuation and structural code validation are not implemented yet. These requirements must be planned without assuming model parameter increases alone solve the problem.
+- Privacy hardening gap: the OpenAI-compatible LLM adapter accepts a configurable base URL, and the current code does not enforce loopback-only endpoints. The default managed llama.cpp and Ollama profiles are local, but strict local-only inference is not guaranteed if a remote URL is configured. Enforce loopback addresses before claiming this privacy requirement is fully satisfied.
 - Android A1/M9 and the shared Python/Kotlin contract M10/A2/A3 remain outstanding.
 - Stage 4 sentence-span selection and the closed-set tool-call protocol remain explicitly gated. Do not start until the owner says so.
 
