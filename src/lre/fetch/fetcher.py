@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 
 import httpx
 
+from lre.fetch.network import request_with_retry
 from lre.fetch.safety import validate_url
 
 
@@ -12,7 +13,9 @@ def cache_key(url: str) -> str:
 
 
 class PageFetcher:
-    def __init__(self, extractor, cache_dir: Path, timeout_seconds: float = 15, max_bytes: int = 2_000_000, user_agent: str = "lre/0.1", block_private: bool = True, respect_robots: bool = True):
+    def __init__(self, extractor, cache_dir: Path, timeout_seconds: float = 15, max_bytes: int = 2_000_000,
+                 user_agent: str = "lre/0.1", block_private: bool = True, respect_robots: bool = True,
+                 log_dir: Path | None = None, max_retries: int = 2):
         self.extractor = extractor
         self.cache_dir = cache_dir
         self.timeout_seconds = timeout_seconds
@@ -20,6 +23,8 @@ class PageFetcher:
         self.user_agent = user_agent
         self.block_private = block_private
         self.respect_robots = respect_robots
+        self.log_dir = log_dir
+        self.max_retries = max_retries
 
     def fetch(self, url: str) -> tuple[str, str]:
         key = cache_key(url)
@@ -28,13 +33,16 @@ class PageFetcher:
             return cache_file.read_text(encoding="utf-8"), key
         validate_url(url, self.block_private)
         headers = {"User-Agent": self.user_agent}
-        if self.respect_robots and not self._allowed_by_robots(url, headers):
-            raise ValueError("Blocked by robots.txt")
+        timeout = httpx.Timeout(self.timeout_seconds, connect=min(self.timeout_seconds, 8.0))
         current = url
-        with httpx.Client(timeout=self.timeout_seconds, follow_redirects=False, headers=headers) as client:
+        with httpx.Client(timeout=timeout, follow_redirects=False, headers=headers) as client:
+            if self.respect_robots and not self._allowed_by_robots(url, client):
+                raise ValueError("Blocked by robots.txt")
             for _ in range(4):
                 validate_url(current, self.block_private)
-                with client.stream("GET", current) as response:
+                response = request_with_retry(client, "GET", current, log_dir=self.log_dir,
+                                              operation="page_fetch", max_retries=self.max_retries)
+                try:
                     if response.status_code in {301, 302, 303, 307, 308}:
                         location = response.headers.get("location")
                         if not location:
@@ -48,6 +56,8 @@ class PageFetcher:
                         if len(body) > self.max_bytes:
                             raise ValueError("Page exceeds configured size limit")
                     html = bytes(body).decode(response.encoding or "utf-8", errors="replace")
+                finally:
+                    response.close()
                 text = self.extractor.extract(html, current)
                 if not text:
                     raise ValueError("No readable page text found")
@@ -56,15 +66,19 @@ class PageFetcher:
                 return text, key
         raise ValueError("Too many redirects")
 
-    def _allowed_by_robots(self, url: str, headers: dict[str, str]) -> bool:
+    def _allowed_by_robots(self, url: str, client: httpx.Client) -> bool:
         parts = httpx.URL(url)
         robots_url = f"{parts.scheme}://{parts.host}/robots.txt"
         validate_url(robots_url, self.block_private)
-        response = httpx.get(robots_url, timeout=self.timeout_seconds, headers=headers, follow_redirects=False)
-        if response.status_code == 404:
-            return True
-        response.raise_for_status()
-        from urllib.robotparser import RobotFileParser
-        parser = RobotFileParser(robots_url)
-        parser.parse(response.text.splitlines())
-        return parser.can_fetch(self.user_agent, url)
+        response = request_with_retry(client, "GET", robots_url, log_dir=self.log_dir,
+                                      operation="robots_txt", max_retries=self.max_retries)
+        try:
+            if response.status_code == 404:
+                return True
+            response.raise_for_status()
+            from urllib.robotparser import RobotFileParser
+            parser = RobotFileParser(robots_url)
+            parser.parse(response.text.splitlines())
+            return parser.can_fetch(self.user_agent, url)
+        finally:
+            response.close()
