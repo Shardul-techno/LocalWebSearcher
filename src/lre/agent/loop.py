@@ -17,6 +17,7 @@ from lre.core.events import Event
 from lre.core.models import Answer, Passage, RankedPassage, Run, Selection, SourceDoc, TraceStep
 from lre.passages.splitter import SplitConfig, split
 from lre.passages.verify import page_hash
+from lre.fetch.network import log_error
 
 
 @dataclass
@@ -87,6 +88,8 @@ def research(context: ResearchContext, question: str, project: str = "inbox", mo
             try:
                 hits.extend(context.search.search(query, cfg["search"]["results_per_query"]))
             except Exception as exc:
+                log_error(getattr(context.fetch, "log_dir", None), "search_provider", "https://duckduckgo.com/", exc,
+                          None, None, 0, False)
                 trace.append(TraceStep("search", _utc(), int((time.monotonic() - started) * 1000), {"error": type(exc).__name__}))
         seen_urls = {_normalized_url(source.url) for source in sources}
         unique_hits = []
