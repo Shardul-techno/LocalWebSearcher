@@ -5,7 +5,7 @@ if (-not (Get-Command py -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-& py -3.11 -c "import sys; assert sys.version_info[:2] == (3, 11)"
+& py -3.11 -c "import sys; raise SystemExit(0 if sys.version_info[:2] == (3, 11) else 1)" 2>$null
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Python 3.11 was not found. Install it from https://www.python.org/downloads/windows/"
     exit 1

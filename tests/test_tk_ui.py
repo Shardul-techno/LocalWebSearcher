@@ -1,0 +1,24 @@
+"""M6 smoke checks. Skipped when Tcl/Tk is not installed with Python."""
+
+from unittest.mock import MagicMock
+
+import pytest
+
+tk = pytest.importorskip("tkinter")
+
+from lre.ui.tk_app import ResearchWindow
+
+
+def test_research_window_builds_and_reports_missing_model():
+    service = MagicMock()
+    service.model_ready.return_value = (False, "No managed model is selected")
+    service.projects.return_value = ["inbox"]
+    service.history.return_value = []
+    root = tk.Tk()
+    root.withdraw()
+    try:
+        window = ResearchWindow(root, service)
+        assert "No local model ready" in window.progress.get()
+        assert window.run_button.instate(["!disabled"])
+    finally:
+        root.destroy()

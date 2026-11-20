@@ -9,27 +9,33 @@
 - M5 immutable JSON storage, verified rendering, service facade and CLI commands.
 - M6 Tkinter desktop UI with worker-thread research, history and clickable quotes.
 - M7 portable paths, reproducible setup, model catalog/manager, managed llama-server integration and offline selftest.
+- CI fix (`6a23952`): immutable run saves use `O_CREAT|O_EXCL` then `os.replace`, so duplicate saves raise `FileExistsError` on Windows and POSIX. Ubuntu and Windows test jobs plus offline selftests passed; `windows-package` built and uploaded artifacts on run [44679442165](https://github.com/Shardul-techno/LocalWebSearcher/actions/runs/44679442165).
 
 ## In progress
-- M8 packaging and CI (Windows packaging job was skipped while Ubuntu tests failed).
+- M8 packaging and CI: per-user Inno installer, `fresh-setup` job, and silent install/selftest/uninstall in CI.
 
 ## Next
-- Land the immutable-run save fix so Ubuntu CI and `windows-package` can run.
-- Finish M8, then run a live research query and record model timing.
+- Confirm the enhanced M8 CI workflow is green.
+- Manual clean-install checklist in `docs/testing-clean-install.md` on a machine without Python.
+- Live research query with a downloaded model; record timing.
 
 ## Known issues
-- Ubuntu CI failed on `test_file_store_round_trip_is_immutable_and_projects_are_folders`: POSIX `Path.rename` overwrote an existing run instead of raising `FileExistsError`. Fix: exclusive `O_CREAT|O_EXCL` claim before `os.replace`.
+- This developer Python 3.11 install has no `tkinter` module, so the Tk window cannot be launched here. M6 is verified by code review plus offline `ResearchService` ask/save/show tests; a machine with Tcl/Tk-enabled Python (or the packaged `LocalResearch.exe`) is still needed for a live UI click-through.
 - The UI cannot perform live research until a local model is configured and web access is available.
 - The 0.8B model may struggle with query planning and summaries; BM25 fallback remains essential.
 - Android is a future target; this phase only keeps core logic portable.
-- Live model/search timing was not measurable here: Ollama is unreachable and network search fails in this environment.
+- Live model/search timing was not measurable here: no managed model is installed and network search fails in this environment (`DDGSException` from `lre doctor`).
 
 ## Unverified
 - SHA-256 values for the catalog GGUF files; the app computes and requires confirmation before use.
+- Clean-machine install (Windows Sandbox / fresh user) not run yet.
+- Packaged UI launch on a Tcl/Tk-capable runtime not exercised on this laptop.
 
 ## Decisions needing the owner
 - None.
 
 ## How to run
-- `python -m pytest`
-- `python -m lre doctor`
+- `powershell -ExecutionPolicy Bypass -File scripts\setup.ps1`
+- `.\.venv\Scripts\python.exe -m pytest -q`
+- `.\.venv\Scripts\python.exe -m lre doctor`
+- `.\.venv\Scripts\python.exe -m lre selftest`

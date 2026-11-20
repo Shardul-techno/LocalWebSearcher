@@ -7,7 +7,7 @@ AppId={{6A76248B-3690-4B7A-91C9-2E9E1B54E8FA}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={autopf}\Local Research
+DefaultDirName={localappdata}\Programs\LocalResearch
 DefaultGroupName=Local Research
 OutputDir=..\dist
 OutputBaseFilename=LocalResearch-Setup-{#MyAppVersion}
@@ -15,6 +15,8 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 UninstallDisplayName=Local Research
+PrivilegesRequired=lowest
+PrivilegesRequiredOverridesAllowed=dialog
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
@@ -24,8 +26,8 @@ Name: "deleteuserdata"; Description: "Also delete local chats, settings, and dow
 Source: "..\dist\LocalResearch\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\Local Research"; Filename: "{app}\LocalResearch.exe"
-Name: "{autodesktop}\Local Research"; Filename: "{app}\LocalResearch.exe"; Tasks: desktopicon
+Name: "{userprograms}\Local Research"; Filename: "{app}\LocalResearch.exe"
+Name: "{userdesktop}\Local Research"; Filename: "{app}\LocalResearch.exe"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\LocalResearch.exe"; Description: "Launch Local Research"; Flags: nowait postinstall skipifsilent
