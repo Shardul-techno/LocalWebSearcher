@@ -146,7 +146,7 @@ Also add: `LICENSE` (MIT as a placeholder; list "owner must confirm" in `STATUS.
 # STAGE 3 — Shared contract and the full pipeline on Android (M10, A2, A3)
 
 ## M10 — Contract (Python reference)
-- **Sentences in the data model now** (even though selection stays ID-based until Stage 4): `Passage.sentences: list[(start, end)]` in the same page-text coordinates. A sentence runs from its first non-space character to and including its terminating punctuation. Split at `. `, `!`, `?` (plus any closing quote or bracket) followed by whitespace and a capital letter, digit or opening quote, or at a newline. Do not split after abbreviations from a config list (`Dr.`, `e.g.`, `i.e.`, `vs.`, `etc.`, `Fig.`, `No.`), initials, decimals or URLs. Passages are built from **whole sentences**; a sentence never spans two passages.
+- **Sentences in the data model now** (even though selection stays ID-based until Stage 4): `Passage.sentences: list[(start, end)]` in the same page-text coordinates. A sentence runs from its first non-space character to and including its terminating punctuation. Split at `.`, `!`, `?` (plus any closing quote or bracket) followed by whitespace and a capital letter, digit or opening quote, or at a newline. Do not split after abbreviations from a config list (`Dr.`, `e.g.`, `i.e.`, `vs.`, `etc.`, `Fig.`, `No.`), initials, decimals or URLs. Passages are built from **whole sentences**; a sentence never spans two passages.
 - **Offsets are Unicode code points.** Python does this natively; Kotlin strings are UTF-16, so the Kotlin port must convert. Add tests with emoji, CJK and combining characters.
 - Add `Passage.text_sha256` (hash of the passage text) so a synced run can be checked at rest even when the page cache is absent. Bump run files to `schema_version = 2`; the reader still accepts 1.
 - **Tokenizer spec for BM25** written down explicitly (maximal runs of Unicode letters and digits, lowercased with a locale-independent rule, stop-word list from config). Ties broken by passage order. Scores compared with a tolerance, rankings compared exactly.
@@ -165,6 +165,13 @@ Port splitter and sentences, tokenizer and BM25, verify (SHA-256), text-fragment
 **STOP, report (Checkpoint 3).** Include: the APK link, on-device time for one `search`-mode question, and any contract mismatches found between Python and Kotlin.
 
 ---
+
+# STAGE 4 — Advanced selection (M11). Do NOT start until the owner says so
+
+1. **Sentence-range selection (both platforms).** Passages are shown to the model with numbered sentences: `[3] (1) First sentence. (2) Second sentence. ...`. The model answers `PICK: 3:2-3, 7:1-1`, meaning passage 3 sentences 2 to 3, passage 7 sentence 1. Code validates (passage exists, `1 <= first <= last <= n`, at most `max_sentences_per_quote` from config), merges overlaps, and builds each quote as `page_text[sentences[first].start : sentences[last].end]` from the stored record, then verifies it. Invalid picks fall back to the whole passage. Keep `selection.mode = "passage" | "span"` in config so the two can be compared. Update vectors, prompts and tests on both sides. Add a small offline eval set `contract/eval/` (10 to 20 questions with fixture pages) and record in `STATUS.md` a comparison table for the tiny model: valid-format rate, verified-quote rate, answer-contained rate.
+2. **Tool-call protocol.** The agent's `DECIDE` step outputs exactly one line from a closed set: `SEARCH: <query>`, `OPEN: <result ids>`, or `FINISH`. Search results are shown as `[R1] title - domain`, and the model opens pages **by ID**, never by typing URLs. Tools are small classes in `agent/tools.py` (name, description, argument parser, executor) so adding `search_history` or `read_file` later means adding a class. Budgets come from config. If the output cannot be parsed twice, fall back to the deterministic M4 loop. Mirror in Kotlin.
+
+**STOP, report (Checkpoint 4).**
 
 ## 7. Parking lot (do NOT implement; avoid blocking)
 
@@ -215,10 +222,3 @@ Suggested next:  <up to 5 tasks>
 - Every displayed quote passes verification on both platforms; no module breaks the dependency rule; `STATUS.md` is current.
 
 ---
-
-# STAGE 4 — Advanced selection (M11). Do NOT start until the owner says so
-
-1. **Sentence-range selection (both platforms).** Passages are shown to the model with numbered sentences: `[3] (1) First sentence. (2) Second sentence. ...`. The model answers `PICK: 3:2-3, 7:1-1`, meaning passage 3 sentences 2 to 3, passage 7 sentence 1. Code validates (passage exists, `1 <= first <= last <= n`, at most `max_sentences_per_quote` from config), merges overlaps, and builds each quote as `page_text[sentences[first].start : sentences[last].end]` from the stored record, then verifies it. Invalid picks fall back to the whole passage. Keep `selection.mode = "passage" | "span"` in config so the two can be compared. Update vectors, prompts and tests on both sides. Add a small offline eval set `contract/eval/` (10 to 20 questions with fixture pages) and record in `STATUS.md` a comparison table for the tiny model: valid-format rate, verified-quote rate, answer-contained rate.
-2. **Tool-call protocol.** The agent's `DECIDE` step outputs exactly one line from a closed set: `SEARCH: <query>`, `OPEN: <result ids>`, or `FINISH`. Search results are shown as `[R1] title - domain`, and the model opens pages **by ID**, never by typing URLs. Tools are small classes in `agent/tools.py` (name, description, argument parser, executor) so adding `search_history` or `read_file` later means adding a class. Budgets come from config. If the output cannot be parsed twice, fall back to the deterministic M4 loop. Mirror in Kotlin.
-
-**STOP, report (Checkpoint 4).**
