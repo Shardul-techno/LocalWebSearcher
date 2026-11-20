@@ -5,6 +5,7 @@ from typing import Any
 @dataclass(frozen=True)
 class AppConfig:
     data_dir: str
+    storage_dir: str
     log_dir: str
     default_project: str
     language: str
