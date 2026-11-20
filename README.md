@@ -254,7 +254,7 @@ There is no Android Gradle project or Android CI workflow in the repository yet.
 
 The current Python tests cover passage splitting and verification, ranking, parsing, agent-loop behaviour, fetch/search adapters, storage, settings, model management, network handling and UI helpers.
 
-The CI workflow runs the Python tests and offline self-test on Windows and Ubuntu. It also performs a fresh Windows setup and builds, installs, self-tests and uninstalls the Windows package.
+CI is configured to run the Python tests and offline self-test on Windows and Ubuntu. It is also configured to perform a fresh Windows setup and build, install, self-test and uninstall the Windows package. The latest runs for these changes are still queued, so no passing result is claimed here.
 
 A shared Python/Kotlin contract does not exist yet. It is planned before the Android pipeline port. The contract will define run-file compatibility, text offsets, tokenizer behaviour, ranking order, prompt rendering and result rendering. Python will be the reference implementation and Kotlin will be checked against generated shared test vectors.
 
