@@ -94,7 +94,7 @@ jobs:
           $version = (& .\.venv\Scripts\python.exe -c "from lre._version import __version__; print(__version__)").Trim()
           $setup = (Resolve-Path ".\dist\LocalResearch-Setup-$version.exe").Path
           $installerBytes = (Get-Item $setup).Length
-          $payloadBytes = (Get-ChildItem ".\\dist\\LocalResearch" -Recurse -File | Measure-Object -Property Length -Sum).Sum
+          $payloadBytes = (Get-ChildItem ".\dist\LocalResearch" -Recurse -File | Measure-Object -Property Length -Sum).Sum
           Write-Host "Package metrics: installer_bytes=$installerBytes bundled_payload_bytes=$payloadBytes"
           $dir = Join-Path $env:RUNNER_TEMP "LocalResearch-install"
           if (Test-Path $dir) { Remove-Item -Recurse -Force $dir }
