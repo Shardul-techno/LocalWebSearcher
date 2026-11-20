@@ -66,18 +66,6 @@ jobs:
         run: choco install innosetup -y --no-progress
       - shell: pwsh
         run: powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1
-      - name: Silent install, installed selftest, uninstall
-        shell: pwsh
-        run: |
-          $version = .\.venv\Scripts\python.exe -c "from lre._version import __version__; print(__version__)"
-          $setup = ".\dist\LocalResearch-Setup-$version.exe"
-          $dir = Join-Path $env:RUNNER_TEMP "LocalResearch-install"
-          & $setup /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR="$dir"
-          if ($LASTEXITCODE -ne 0) { throw "Silent installer failed with exit $LASTEXITCODE" }
-          & "$dir\lre.exe" selftest
-          if ($LASTEXITCODE -ne 0) { throw "Installed lre.exe selftest failed" }
-          & "$dir\unins000.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
-          if ($LASTEXITCODE -ne 0) { throw "Silent uninstall failed with exit $LASTEXITCODE" }
       - uses: actions/upload-artifact@v4
         with:
           name: LocalResearch-Windows
@@ -85,3 +73,22 @@ jobs:
             dist/LocalResearch-Setup-*.exe
             dist/LocalResearch-*-portable.zip
             dist/SHA256SUMS.txt
+      - name: Silent install, installed selftest, uninstall
+        shell: pwsh
+        run: |
+          $version = (& .\.venv\Scripts\python.exe -c "from lre._version import __version__; print(__version__)").Trim()
+          $setup = (Resolve-Path ".\dist\LocalResearch-Setup-$version.exe").Path
+          $dir = Join-Path $env:RUNNER_TEMP "LocalResearch-install"
+          if (Test-Path $dir) { Remove-Item -Recurse -Force $dir }
+          $install = Start-Process -FilePath $setup -ArgumentList @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-", "/DIR=$dir") -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "Silent installer failed with exit $($install.ExitCode)" }
+          if (-not (Test-Path "$dir\lre.exe")) {
+            Get-ChildItem -Force $dir -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
+            throw "lre.exe missing after silent install into $dir"
+          }
+          & "$dir\lre.exe" selftest
+          if ($LASTEXITCODE -ne 0) { throw "Installed lre.exe selftest failed with exit $LASTEXITCODE" }
+          $unins = Get-ChildItem $dir -Filter "unins*.exe" | Select-Object -First 1
+          if (-not $unins) { throw "Uninstaller not found in $dir" }
+          $uninstall = Start-Process -FilePath $unins.FullName -ArgumentList @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART") -Wait -PassThru
+          if ($uninstall.ExitCode -ne 0) { throw "Silent uninstall failed with exit $($uninstall.ExitCode)" }

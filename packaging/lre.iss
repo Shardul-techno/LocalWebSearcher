@@ -16,7 +16,6 @@ SolidCompression=yes
 WizardStyle=modern
 UninstallDisplayName=Local Research
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
