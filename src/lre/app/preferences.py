@@ -58,6 +58,8 @@ def migrate_storage(source_root: Path, target_root: Path) -> None:
     source_root, target_root = source_root.expanduser().resolve(), target_root.expanduser().resolve()
     if source_root == target_root:
         return
+    if target_root.is_relative_to(source_root) or source_root.is_relative_to(target_root):
+        raise ValueError("Choose a storage folder that is not inside the current storage folder (or vice versa).")
     target_root.mkdir(parents=True, exist_ok=True)
     for name in _STORAGE_DIRS:
         src, dst = source_root / name, target_root / name
