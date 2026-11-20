@@ -8,4 +8,4 @@ Dependency direction: `core` is standalone; adapters use core/settings; agent us
 
 Configuration groups: `[app]` paths/project, `[llm]` active profile, `[search]` provider/results, `[fetch]` network bounds, `[passages]` slicing/ranking, `[agent]` mode and call bounds, `[output]` rendering. Typed dataclasses validate the TOML shape. Model-specific endpoint and generation values live in `config/models.toml`.
 
-Runs are immutable JSON files in `data/projects/<project>/`; extracted page text is cached under `data/cache/` and can be excluded from Syncthing using `data/.stignore.example`.
+Runs are immutable JSON files in `<storage-root>/data/projects/<project>/`; extracted page text is cached under `<storage-root>/cache/`. Models, logs and temporary files share the selected root in `models/`, `logs/` and `temp/`. Storage migration verifies copied files and keeps the original. Page and robots HTTP requests use bounded retries and redacted JSONL diagnostics in `logs/network-errors.jsonl`.
