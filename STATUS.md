@@ -1,42 +1,71 @@
 # Status
 
+## Current position
+
+- Windows milestones M6, M7 and M8 are implemented in the repository.
+- The active plan is now `CODEX_NEXT_STEPS.md`. It records completed Windows work and leaves Android A1/M9, shared contract M10/A2/A3 and the explicitly gated Stage 4 work outstanding.
+- `My_Idea.md` contains the required **Model working** section and remains the source of truth for final-product requirements.
+- The next permitted implementation stage is Stage 2 (A1 + M9), but first complete the outstanding Stage 1 Checkpoint 1 verification. Do not start Stage 2 until the owner explicitly authorizes it.
+
 ## Done
+
 - M0 scaffold and typed TOML loader.
 - M1 exact passage slices, BM25, hash verification and text-fragment links.
 - M2 Ollama/OpenAI-compatible adapters, fake backend and tolerant output parsing.
 - M3 DDGS/Wikipedia search adapters, SSRF-aware bounded fetcher, extraction and cache.
 - M4 bounded multi-round loop with cancellation, traces, validated IDs and BM25 fallback.
 - M5 immutable JSON storage, verified rendering, service facade and CLI commands.
-- M6 Tkinter desktop UI with worker-thread research, history and clickable quotes.
-- M7 portable paths, reproducible setup, model catalog/manager, managed llama-server integration and offline selftest.
-- M8 packaging and CI: PyInstaller one-folder build, per-user Inno installer (`PrivilegesRequired=lowest` → `%LOCALAPPDATA%\Programs\LocalResearch`), portable zip + checksums, `fresh-setup` job, Windows package job with silent install / installed `selftest` / uninstall, release workflow on `v*` tags.
-- CI fix (`6a23952`): immutable run saves use `O_CREAT|O_EXCL` then `os.replace` (POSIX rename no longer overwrites). Confirmed green on [44681766935](https://github.com/Shardul-techno/LocalWebSearcher/actions/runs/44681766935) at `19aab22`.
+- M6 Tkinter desktop UI with worker-thread research, history, clickable quotes, Run/Cancel, progress and project/mode controls. Enter submits the prompt. Shift+Enter multiline submission is not implemented because the current prompt control is single-line.
+- M7 portable/runtime paths, reproducible setup, model catalog/manager, managed llama-server integration and offline selftest.
+- M7 storage follow-up: first-run storage-root selection, later storage-location menu, separated data/cache/models/logs/temp/assets folders, migration/verification and retention of original files. Legacy split data/models/logs layouts are imported during first selection.
+- M8 packaging and CI: PyInstaller one-folder build, per-user Windows installer, portable zip + checksums, fresh-setup job, Windows package job with silent install / installed selftest / uninstall, and release workflow on `v*` tags.
+- Shared HTTP network helper in `src/lre/fetch/network.py`: bounded retries for transient network errors and selected HTTP statuses, exponential backoff with jitter, Retry-After handling, and redacted JSONL diagnostics. Integrated with page fetching and Wikipedia search; URL validation and isolated search-provider errors are logged.
+- Network tests in `tests/test_network.py`.
+- Documentation: `CODEX_NEXT_STEPS.md` created/updated to remove completed Windows implementation tasks from active work, record them as done, and retain the remaining Android/shared-contract/Stage 4 instructions.
 
-## In progress
-- Stage 1 checkpoint measurements and a clean-machine manual install.
+## In progress / remaining
 
-## Next
-- Owner: install the CI artifact on a clean Windows account/Sandbox using `docs/testing-clean-install.md`.
-- Download a catalog model and time one `search`-mode question on the laptop.
-- Stage 2 (Android A1 + README rewrite) only after the owner says to continue.
+### Stage 1 — Checkpoint 1 verification only
+
+- Record installer size.
+- Record installed size.
+- Measure cold start time.
+- Measure one `search`-mode question on the owner's laptop with the bundled model.
+- Run the manual clean-machine checklist in `docs/testing-clean-install.md` on Windows Sandbox or a fresh Windows user account.
+- Do not invent measurements or mark the checkpoint complete until these are measured.
+
+### Remaining requirements from My_Idea.md
+
+- Shift+Enter must insert a newline while Enter submits. The current Tk prompt uses a single-line Entry, so this is not yet satisfied.
+- Broader network hardening remains: the current helper is not yet proven against the complete requested matrix (DNS failures, certificate errors, redirect loops, malformed/empty responses, offline operation, interrupted downloads, and all timeout/cancellation cases). Add tests and improve only where gaps are demonstrated.
+- Output truncation/incomplete-code detection, finish-reason preservation, controlled continuation and structural code validation are not implemented yet. These requirements must be planned without assuming model parameter increases alone solve the problem.
+- Android A1/M9 and the shared Python/Kotlin contract M10/A2/A3 remain outstanding.
+- Stage 4 sentence-span selection and the closed-set tool-call protocol remain explicitly gated. Do not start until the owner says so.
 
 ## Known issues
-- This developer Python 3.11 install has no `tkinter` module, so the Tk window cannot be launched here. M6 is verified by code review, offline `ResearchService` ask/save/show tests, and the Windows CI Tk smoke test; Ubuntu skips that smoke test when no display is available.
-- Live research still needs a downloaded local model plus working web search.
+
+- This developer Python 3.11 install has no `tkinter` module, so the Tk window cannot be launched in this environment. M6 is covered by UI tests and Windows CI smoke coverage; actual local GUI behaviour still needs the owner's machine.
+- Live research needs a downloaded local model plus working web search.
 - The 0.8B model may struggle with query planning and summaries; BM25 fallback remains essential.
 - Installer is unsigned; SmartScreen will warn (documented in the clean-install checklist).
 
 ## Unverified
-- SHA-256 values for the catalog GGUF files; the app computes and requires confirmation before use.
+
 - Clean-machine install (Windows Sandbox / fresh user) not run yet.
-- Cold-start time and live `search`-mode timing not measured on this laptop.
-- Exact on-disk installed size not measured locally (CI artifact zip size is available from the Actions run).
+- Cold-start time and live `search`-mode timing not measured on the owner's laptop.
+- Exact installed size has not been measured locally.
+- GGUF catalog SHA-256 values are not all independently verified against official model releases; where the catalog hash is absent, the manager computes a hash and requires confirmation before use.
+- The latest CI state was not re-queried as part of this documentation update; consult the Actions page before relying on a pass claim.
+- `CODEX_INSTRUCTIONS.md`, which `CODEX_NEXT_STEPS.md` says contains the inherited M0–M5 rules, is not present in the current repository tree. Add/restore it or confirm that its instructions are captured elsewhere before treating those inherited rules as available to a fresh contributor.
 
 ## Decisions needing the owner
-- Confirm Stage 1 is accepted before Stage 2 (Android) begins.
+
+- Confirm Stage 1 Checkpoint 1 measurements and clean-machine test.
+- Explicitly authorize Stage 2 (Android A1 + README rewrite) after Checkpoint 1.
 - LICENSE is MIT placeholder; owner must confirm.
 
 ## How to run
+
 - `powershell -ExecutionPolicy Bypass -File scripts\setup.ps1`
 - `.\.venv\Scripts\python.exe -m pytest -q`
 - `.\.venv\Scripts\python.exe -m lre doctor`
