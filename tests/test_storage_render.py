@@ -66,7 +66,7 @@ def test_service_ask_save_and_show_offline(tmp_path, monkeypatch):
     ]))
 
     class CachedFetcher:
-        def __init__(self, extractor, cache_dir, *args):
+        def __init__(self, extractor, cache_dir, *args, **kwargs):
             self.cache_dir = cache_dir
         def fetch(self, url):
             text = "Energy use declined by 18 percent during the trial against a seasonal baseline measured the prior year."
