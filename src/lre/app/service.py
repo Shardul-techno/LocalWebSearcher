@@ -16,7 +16,7 @@ from lre.settings.loader import load_settings
 from lre.settings.paths import resolve_paths
 from lre.storage.file_store import FileRunStore
 from lre.app.render import RenderedRun, render
-from lre.app.preferences import set_active_model, set_data_directory
+from lre.app.preferences import migrate_storage, set_active_model, set_storage_directory
 
 
 class ResearchService:
@@ -25,11 +25,15 @@ class ResearchService:
         self.paths = resolve_paths(self.project_root)
         self.settings = load_settings(self.project_root / "config", self.paths.user_config)
         app = self.settings.section("app")
-        self.data_dir = self.paths.data_dir if app["data_dir"] == "auto" else Path(app["data_dir"])
-        if not self.data_dir.is_absolute():
-            self.data_dir = self.project_root / self.data_dir
-        self.store = FileRunStore(self.data_dir)
-        self.model_manager = ModelManager(self.paths.models_dir, self.project_root / "config" / "model_catalog.toml")
+        configured_root = app.get("storage_dir", "auto")
+        # Migrate the previous data-folder preference as the new unified root.
+        if configured_root == "auto" and app.get("data_dir", "auto") != "auto":
+            configured_root = app["data_dir"]
+        self.storage_selection_required = configured_root == "auto"
+        root = self.paths.storage_root if self.storage_selection_required else Path(configured_root).expanduser()
+        if not root.is_absolute():
+            root = self.project_root / root
+        self._configure_storage(root)
         self.managed_server: ManagedServer | None = None
 
     def ask(self, question: str, project: str | None = None, mode: str | None = None, style: str = "focused", model_profile: str | None = None, cancel=None, on_event: Callable[[Event], None] | None = None):
@@ -41,7 +45,7 @@ class ResearchService:
         profile = dict(self.settings.models[model_name])
         if profile["backend"] == "llamacpp_managed":
             model_path = self.model_manager.active_path()
-            self.managed_server = self.managed_server or ManagedServer(self.project_root / "bin" / "llama-server.exe", model_path or Path(), self.paths.log_dir, profile["num_ctx"], profile["threads"])
+            self.managed_server = self.managed_server or ManagedServer(self.project_root / "bin" / "llama-server.exe", model_path or Path(), self.log_dir, profile["num_ctx"], profile["threads"])
             profile["base_url"] = self.managed_server.start()
         search_cfg = values["search"]
         if search_cfg["provider"] == "ddg":
@@ -51,11 +55,11 @@ class ResearchService:
         else:
             raise ValueError(f"Unknown search provider: {search_cfg['provider']}")
         fetch_cfg = values["fetch"]
-        fetch = PageFetcher(TrafilaturaExtractor(), self.data_dir / "cache", fetch_cfg["timeout_seconds"], fetch_cfg["max_bytes"], fetch_cfg["user_agent"], fetch_cfg["block_private_ips"], fetch_cfg["respect_robots_txt"])
+        fetch = PageFetcher(TrafilaturaExtractor(), self.cache_dir, fetch_cfg["timeout_seconds"], fetch_cfg["max_bytes"], fetch_cfg["user_agent"], fetch_cfg["block_private_ips"], fetch_cfg["respect_robots_txt"], log_dir=self.log_dir)
         context = ResearchContext(values, self.project_root, build_backend(profile), search, fetch, BM25(values["passages"]["k1"], values["passages"]["b"], set(values["passages"]["stop_words"])))
         run = research(context, question, project or values["app"]["default_project"], mode or values["agent"]["default_mode"], style, cancel, on_event)
         self.store.save(run)
-        return run, render(run, self.data_dir / "cache")
+        return run, render(run, self.cache_dir)
 
     def history(self, project: str | None = None):
         return self.store.list(project or self.settings.values["app"]["default_project"])
@@ -79,8 +83,25 @@ class ResearchService:
             return True, "Managed model is ready to start."
         return check_model(profile)
 
+    def _configure_storage(self, storage_root: Path) -> None:
+        self.storage_root = storage_root.expanduser().resolve()
+        self.data_dir = self.storage_root / "data"
+        self.cache_dir = self.storage_root / "cache"
+        self.log_dir = self.storage_root / "logs"
+        self.models_dir = self.storage_root / "models"
+        self.temp_dir = self.storage_root / "temp"
+        self.store = FileRunStore(self.data_dir)
+        self.model_manager = ModelManager(self.models_dir, self.project_root / "config" / "model_catalog.toml")
+
+    def set_storage_directory(self, storage_dir: Path) -> None:
+        target = storage_dir.expanduser().resolve()
+        migrate_storage(self.storage_root, target)
+        set_storage_directory(self.paths.user_config, target)
+        self._configure_storage(target)
+        self.storage_selection_required = False
+
     def set_data_directory(self, data_dir: Path) -> None:
-        set_data_directory(self.paths.user_config, data_dir)
+        self.set_storage_directory(data_dir)
 
     def models(self) -> list[dict]:
         return self.model_manager.list()
