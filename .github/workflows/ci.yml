@@ -37,9 +37,24 @@ jobs:
       - name: Offline self-test
         run: .venv/Scripts/python.exe -m lre selftest
         if: runner.os == 'Windows'
+      - name: README CLI smoke commands
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          .\\.venv\\Scripts\\python.exe -m lre --help
+          .\\.venv\\Scripts\\python.exe -m lre ask --help
+          .\\.venv\\Scripts\\python.exe -m lre models list
+          .\\.venv\\Scripts\\python.exe -m lre projects
       - name: Offline self-test
         run: .venv/bin/python -m lre selftest
         if: runner.os != 'Windows'
+      - name: README CLI smoke commands
+        if: runner.os != 'Windows'
+        run: |
+          .venv/bin/python -m lre --help
+          .venv/bin/python -m lre ask --help
+          .venv/bin/python -m lre models list
+          .venv/bin/python -m lre projects
 
   fresh-setup:
     runs-on: windows-latest
