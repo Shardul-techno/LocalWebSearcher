@@ -22,6 +22,6 @@ def test_research_window_builds_and_reports_missing_model():
     try:
         window = ResearchWindow(root, service)
         assert "No local model ready" in window.progress.get()
-        assert window.run_button.instate(["!disabled"])
+        assert window.run_button.instate(["!disabled"])\n        assert window.prompt_entry.bind("<Return>")
     finally:
         root.destroy()
