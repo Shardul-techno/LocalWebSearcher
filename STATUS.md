@@ -3,9 +3,9 @@
 ## Current position
 
 - Windows milestones M6, M7 and M8 are implemented in the repository.
-- The active plan is now `CODEX_NEXT_STEPS.md`. It records completed Windows work and leaves Android A1/M9, shared contract M10/A2/A3 and the explicitly gated Stage 4 work outstanding.
+- The active plan is `CODEX_NEXT_STEPS.md`. Windows M6–M8 are implemented; Android A1 and the shared contract M10/A2/A3 remain outstanding. Stage 4 remains explicitly gated. The owner requested an early documentation pass, so README/architecture files have been refreshed now; they must be refreshed again after the remaining milestones and stages.
 - `My_Idea.md` contains the required **Model working** section and remains the source of truth for final-product requirements.
-- The next permitted implementation stage is Stage 2 (A1 + M9), but first complete the outstanding Stage 1 Checkpoint 1 verification. Do not start Stage 2 until the owner explicitly authorizes it.
+- The next permitted implementation work is Stage 2 A1 (Android), but first complete Stage 1 Checkpoint 1. The M9 documentation pass has been brought forward by owner instruction; its CI checks are pending and the final documentation refresh remains due later. Do not begin Android until Checkpoint 1 is verified.
 
 ## Done
 
@@ -21,7 +21,8 @@
 - M8 packaging and CI: PyInstaller one-folder build, per-user Windows installer, portable zip + checksums, fresh-setup job, Windows package job with silent install / installed selftest / uninstall, and release workflow on `v*` tags.
 - Shared HTTP network helper in `src/lre/fetch/network.py`: bounded retries for transient network errors and selected HTTP statuses, exponential backoff with jitter, Retry-After handling, and redacted JSONL diagnostics. Integrated with page fetching and Wikipedia search; URL validation and isolated search-provider errors are logged.
 - Network tests in `tests/test_network.py`.
-- Documentation: `CODEX_NEXT_STEPS.md` created/updated to remove completed Windows implementation tasks from active work, record them as done, and retain the remaining Android/shared-contract/Stage 4 instructions.
+- Documentation: `CODEX_NEXT_STEPS.md` records completed Windows work and remaining Android/shared-contract/Stage 4 instructions.
+- Early M9 documentation pass (owner-requested before Android): root `README.md` rewritten to 280 lines, root `ARCHITECTURE.md` made a short entry point, `docs/ARCHITECTURE.md` added, `tests/test_readme_paths.py` added, and README CLI smoke commands added to CI. `THIRD_PARTY_NOTICES.md` now records an initial direct-component/model license inventory and explicitly lists the remaining legal/inventory checks. This is not the final documentation refresh.
 
 ## In progress / remaining
 
@@ -55,19 +56,20 @@
 - Cold-start time and live `search`-mode timing not measured on the owner's laptop.
 - Exact installed size has not been measured locally.
 - GGUF catalog SHA-256 values are not all independently verified against official model releases; where the catalog hash is absent, the manager computes a hash and requires confirmation before use.
-- Latest remote CI check (2026-11-20): workflow run [#37](https://github.com/Shardul-techno/LocalWebSearcher/actions/runs/44736964563) for commit `087c5a71` is **queued**; its Windows, Ubuntu and fresh-setup jobs have not started. The commit status is pending with no reported checks. No passing result is currently verified.
+- Latest remote CI check (2026-11-20): workflow run [#46](https://github.com/Shardul-techno/LocalWebSearcher/actions/runs/44744169036) for commit `ba5cfbd1` is **queued**. No passing result is currently verified. The new README path test and CLI smoke commands have therefore not yet been executed by CI.
 - `CODEX_INSTRUCTIONS.md`, which `CODEX_NEXT_STEPS.md` says contains the inherited M0–M5 rules, is not present in the repository. `AGENTS.md` exists, but it contains project context and a copy of the product requirements, not the missing inherited M0–M5 implementation rules. Restore the correct file or confirm its authoritative location before treating those inherited rules as available to a fresh contributor.
 
 ## Decisions needing the owner
 
 - Confirm Stage 1 Checkpoint 1 measurements and clean-machine test.
-- Explicitly authorize Stage 2 (Android A1 + README rewrite) after Checkpoint 1.
+- Complete Stage 1 Checkpoint 1 before Android A1. The README/architecture early pass must receive a final refresh after all remaining milestones and stages.
 - LICENSE is MIT placeholder; owner must confirm.
 
 ## Verification attempt — 2026-11-20
 
 - Attempted a fresh clone so the prescribed tests and `python -m lre doctor` / `python -m lre selftest` could be run. The execution environment could not resolve `github.com` (DNS failure), so no repository code was executed locally in this session.
-- GitHub Actions run #37 is queued and has not provided test evidence yet. Do not treat the queued run as a pass.
+- GitHub Actions run #46 is queued and has not provided test evidence yet. Do not treat the queued run as a pass.
+- A static comparison of the README's backticked path references against the current GitHub tree found no missing paths. This is not a substitute for running `tests/test_readme_paths.py` in CI.
 - The repository tree currently has no `android/` directory and no `.github/workflows/android.yml`; this is expected because Stage 2 has not begun.
 - `My_Idea.md` was read and not modified.
 
