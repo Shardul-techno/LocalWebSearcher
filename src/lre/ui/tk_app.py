@@ -43,7 +43,9 @@ class ResearchWindow:
         controls = ttk.Frame(self.root, padding=10)
         controls.grid(row=0, column=0, columnspan=2, sticky="ew")
         controls.columnconfigure(0, weight=1)
-        ttk.Entry(controls, textvariable=self.question).grid(row=0, column=0, sticky="ew", padx=(0, 8))
+        self.prompt_entry = ttk.Entry(controls, textvariable=self.question)
+        self.prompt_entry.grid(row=0, column=0, sticky="ew", padx=(0, 8))
+        self.prompt_entry.bind("<Return>", self._submit_from_enter)
         ttk.Combobox(controls, textvariable=self.mode, values=("simple", "search", "deep"), state="readonly", width=9).grid(row=0, column=1, padx=(0, 8))
         self.projects = ttk.Combobox(controls, textvariable=self.project, state="normal", width=16)
         self.projects.grid(row=0, column=2, padx=(0, 8))
@@ -78,7 +80,13 @@ class ResearchWindow:
         for run in self.runs:
             self.history.insert(tk.END, f"{run.created_at[:16]}  {run.question[:36]}")
 
+    def _submit_from_enter(self, _event: object) -> str:
+        self.run()
+        return "break"
+
     def run(self) -> None:
+        if str(self.run_button["state"]) == "disabled":
+            return
         question = self.question.get().strip()
         if not question:
             self.progress.set("Enter a question first.")
