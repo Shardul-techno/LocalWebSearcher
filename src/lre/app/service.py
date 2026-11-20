@@ -66,7 +66,7 @@ class ResearchService:
 
     def show(self, run_id: str, project: str | None = None) -> tuple[object, RenderedRun]:
         run = self.store.load(project or self.settings.values["app"]["default_project"], run_id)
-        return run, render(run, self.data_dir / "cache")
+        return run, render(run, self.cache_dir)
 
     def projects(self) -> list[str]:
         return self.store.list_projects()
