@@ -11,12 +11,14 @@
 - M7 portable paths, reproducible setup, model catalog/manager, managed llama-server integration and offline selftest.
 
 ## In progress
-- M8 packaging and CI.
+- M8 packaging and CI (Windows packaging job was skipped while Ubuntu tests failed).
 
 ## Next
+- Land the immutable-run save fix so Ubuntu CI and `windows-package` can run.
 - Finish M8, then run a live research query and record model timing.
 
 ## Known issues
+- Ubuntu CI failed on `test_file_store_round_trip_is_immutable_and_projects_are_folders`: POSIX `Path.rename` overwrote an existing run instead of raising `FileExistsError`. Fix: exclusive `O_CREAT|O_EXCL` claim before `os.replace`.
 - The UI cannot perform live research until a local model is configured and web access is available.
 - The 0.8B model may struggle with query planning and summaries; BM25 fallback remains essential.
 - Android is a future target; this phase only keeps core logic portable.

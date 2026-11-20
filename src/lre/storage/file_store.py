@@ -34,14 +34,22 @@ class FileRunStore:
         target = folder / f"{stamp}_{run.run_id.replace('-', '')[:8]}.json"
         payload = json.dumps(asdict(run), ensure_ascii=False, indent=2)
         fd, temp_name = tempfile.mkstemp(prefix=".run-", suffix=".tmp", dir=folder)
+        claimed = False
         try:
             with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
                 handle.write(payload)
                 handle.flush()
                 os.fsync(handle.fileno())
-            Path(temp_name).rename(target)  # Fails rather than overwriting an existing immutable run.
+            # Claim the destination exclusively. Plain rename/replace overwrites on POSIX,
+            # which would silently mutate an immutable run; O_EXCL fails on both platforms.
+            claim_fd = os.open(target, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(claim_fd)
+            claimed = True
+            os.replace(temp_name, target)
         except Exception:
             Path(temp_name).unlink(missing_ok=True)
+            if claimed:
+                target.unlink(missing_ok=True)
             raise
         return target
 

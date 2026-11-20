@@ -31,8 +31,10 @@ def test_file_store_round_trip_is_immutable_and_projects_are_folders(tmp_path):
     assert store.load("inbox", run.run_id) == run
     assert store.list("inbox") == [run]
     assert store.create_project("research/subfolder").is_dir()
+    original = path.read_text(encoding="utf-8")
     with pytest.raises(FileExistsError):
         store.save(run)
+    assert path.read_text(encoding="utf-8") == original
     with pytest.raises(ValueError):
         store.create_project("../outside")
 
