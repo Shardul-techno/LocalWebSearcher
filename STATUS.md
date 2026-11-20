@@ -57,7 +57,7 @@
 - Cold-start time and live `search`-mode timing not measured on the owner's laptop.
 - Exact installed size has not been measured locally.
 - GGUF catalog SHA-256 values are not all independently verified against official model releases; where the catalog hash is absent, the manager computes a hash and requires confirmation before use.
-- Latest remote CI check (2026-11-20): workflow run [#51](https://github.com/Shardul-techno/LocalWebSearcher/actions/runs/44744318925) for commit `8b17f82d` is **queued**. No passing result is currently verified. The new README path test, CLI smoke commands and package-size metrics have therefore not yet been executed by CI.
+- As of this check on 2026-11-20, workflow runs [#51](https://github.com/Shardul-techno/LocalWebSearcher/actions/runs/44744318925) (README/CI/package-metrics changes) and [#52](https://github.com/Shardul-techno/LocalWebSearcher/actions/runs/44744338044) (status update) are **queued**. No passing result is currently verified. The new README path test, CLI smoke commands and package-size metrics have therefore not yet been executed by CI.
 - `CODEX_INSTRUCTIONS.md`, which `CODEX_NEXT_STEPS.md` says contains the inherited M0–M5 rules, is not present in the repository. `AGENTS.md` exists, but it contains project context and a copy of the product requirements, not the missing inherited M0–M5 implementation rules. Restore the correct file or confirm its authoritative location before treating those inherited rules as available to a fresh contributor.
 
 ## Decisions needing the owner
@@ -69,7 +69,7 @@
 ## Verification attempt — 2026-11-20
 
 - Attempted a fresh clone so the prescribed tests and `python -m lre doctor` / `python -m lre selftest` could be run. The execution environment could not resolve `github.com` (DNS failure), so no repository code was executed locally in this session.
-- GitHub Actions run #51 is queued and has not provided test evidence yet. Do not treat the queued run as a pass.
+- GitHub Actions runs #51 and #52 are queued and have not provided test evidence yet. Do not treat the queued runs as passes.
 - The Windows package job now logs installer bytes, bundled payload bytes and installed-file bytes. These measurements are pending the queued run; the owner's laptop cold-start and live Search-mode timings still require local measurement.
 - A static comparison of the README's backticked path references against the current GitHub tree found no missing paths. This is not a substitute for running `tests/test_readme_paths.py` in CI.
 - The repository tree currently has no `android/` directory and no `.github/workflows/android.yml`; this is expected because Stage 2 has not begun.
