@@ -1,11 +1,17 @@
 # Architecture
 
-`core` contains portable data structures. `settings` loads TOML. Adapters in `llm`, `search` and `fetch` implement narrow interfaces. `passages` splits canonical text, ranks it and verifies exact source offsets. `agent` coordinates bounded research. `storage` persists immutable runs. `app` is the composition and rendering layer; `ui` calls only that facade.
+This file is the short architecture entry point. The current module map, dependency rules, research data flow, storage model, networking boundaries and known gaps are documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-Data flows from question to search hits, fetched page text, exact passage slices, selection, verified quotes, summary and immutable run file. User data is stored under `data/`; cache is URL-hash keyed and logs have a separate configured path. `ResearchService` wires the adapters and is the only API used by UIs.
+The architecture is intentionally modular:
 
-Dependency direction: `core` is standalone; adapters use core/settings; agent uses interfaces; app wires implementations; UI imports app/core only. Third-party imports belong in adapter modules.
+- `core` holds portable data models and events.
+- `settings` loads and validates configuration and resolves runtime paths.
+- `search`, `fetch`, `llm` and `passages` provide replaceable adapters and processing components.
+- `agent` coordinates the bounded research loop through interfaces.
+- `storage` persists immutable run files.
+- `app` composes the implementation behind `ResearchService`.
+- `ui` contains the Tk desktop UI and CLI; both call the app facade.
 
-Configuration groups: `[app]` paths/project, `[llm]` active profile, `[search]` provider/results, `[fetch]` network bounds, `[passages]` slicing/ranking, `[agent]` mode and call bounds, `[output]` rendering. Typed dataclasses validate the TOML shape. Model-specific endpoint and generation values live in `config/models.toml`.
+Dependency direction is inward toward portable interfaces: core does not depend on UI or external providers; adapters implement narrow boundaries; the app composes them; UI does not instantiate providers directly.
 
-Runs are immutable JSON files in `<storage-root>/data/projects/<project>/`; extracted page text is cached under `<storage-root>/cache/`. Models, logs and temporary files share the selected root in `models/`, `logs/` and `temp/`. Storage migration verifies copied files and keeps the original. Page and robots HTTP requests use bounded retries and redacted JSONL diagnostics in `logs/network-errors.jsonl`.
+Do not rewrite the existing architecture to suit a different language. Android will be a separate Kotlin implementation that matches the Python reference through the shared contract planned in `CODEX_NEXT_STEPS.md`.
