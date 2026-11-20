@@ -1,5 +1,6 @@
 [app]
 data_dir = "auto"
+storage_dir = "auto"
 log_dir = "logs"
 default_project = "inbox"
 language = "en"
