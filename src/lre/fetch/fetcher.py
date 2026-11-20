@@ -31,7 +31,7 @@ class PageFetcher:
         cache_file = self.cache_dir / f"{key}.txt"
         if cache_file.exists():
             return cache_file.read_text(encoding="utf-8"), key
-        validate_url(url, self.block_private)
+        self._validate(url, "url_validation")
         headers = {"User-Agent": self.user_agent}
         timeout = httpx.Timeout(self.timeout_seconds, connect=min(self.timeout_seconds, 8.0))
         current = url
@@ -39,7 +39,7 @@ class PageFetcher:
             if self.respect_robots and not self._allowed_by_robots(url, client):
                 raise ValueError("Blocked by robots.txt")
             for _ in range(4):
-                validate_url(current, self.block_private)
+                self._validate(current, "redirect_validation")
                 response = request_with_retry(client, "GET", current, log_dir=self.log_dir,
                                               operation="page_fetch", max_retries=self.max_retries)
                 try:
@@ -66,10 +66,18 @@ class PageFetcher:
                 return text, key
         raise ValueError("Too many redirects")
 
+    def _validate(self, url: str, operation: str) -> None:
+        try:
+            validate_url(url, self.block_private)
+        except Exception as exc:
+            from lre.fetch.network import log_error
+            log_error(self.log_dir, operation, url, exc, None, self.timeout_seconds, 0, False)
+            raise
+
     def _allowed_by_robots(self, url: str, client: httpx.Client) -> bool:
         parts = httpx.URL(url)
         robots_url = f"{parts.scheme}://{parts.host}/robots.txt"
-        validate_url(robots_url, self.block_private)
+        self._validate(robots_url, "robots_url_validation")
         response = request_with_retry(client, "GET", robots_url, log_dir=self.log_dir,
                                       operation="robots_txt", max_retries=self.max_retries)
         try:
