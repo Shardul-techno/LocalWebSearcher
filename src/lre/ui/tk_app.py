@@ -53,7 +53,7 @@ class ResearchWindow:
         self.root.rowconfigure(1, weight=1)
         menu = tk.Menu(self.root)
         app_menu = tk.Menu(menu, tearoff=False)
-        app_menu.add_command(label="Data folder…", command=self.choose_data_folder)
+        app_menu.add_command(label="Storage location…", command=self.choose_data_folder)
         app_menu.add_command(label="Models…", command=self.models_dialog)
         menu.add_cascade(label="App", menu=app_menu)
         self.root.config(menu=menu)
