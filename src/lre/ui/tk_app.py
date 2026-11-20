@@ -22,6 +22,16 @@ class ResearchWindow:
         self.project = tk.StringVar(value="inbox")
         self.progress = tk.StringVar(value="Ready")
         self._build()
+        if getattr(self.service, "storage_selection_required", False):
+            selected = filedialog.askdirectory(
+                parent=self.root, title="Choose Local Research storage folder",
+                initialdir=str(self.service.storage_root),
+            )
+            if selected:
+                try:
+                    self.service.set_storage_directory(Path(selected))
+                except Exception as exc:
+                    messagebox.showerror("Storage migration failed", str(exc), parent=self.root)
         self.reload_projects()
         self.reload_history()
         ready, message = self.service.model_ready()
@@ -171,10 +181,10 @@ class ResearchWindow:
             self.show_result(rendered)
 
     def choose_data_folder(self) -> None:
-        selected = filedialog.askdirectory(parent=self.root, title="Choose Local Research data folder")
+        selected = filedialog.askdirectory(parent=self.root, title="Choose Local Research storage root")
         if selected:
-            self.service.set_data_directory(Path(selected))
-            messagebox.showinfo("Data folder", "Saved. Restart Local Research to use the new folder.")
+            self.service.set_storage_directory(Path(selected))
+            messagebox.showinfo("Storage location", "Data, caches, logs and models were copied and verified. The original folder was kept. Restart Local Research to use the new location.")
 
     def models_dialog(self) -> None:
         self.model_window = tk.Toplevel(self.root)
