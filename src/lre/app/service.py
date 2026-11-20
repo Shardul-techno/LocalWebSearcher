@@ -51,7 +51,7 @@ class ResearchService:
         if search_cfg["provider"] == "ddg":
             search = DuckDuckGoProvider(search_cfg["region"], search_cfg["safe_search"])
         elif search_cfg["provider"] == "wikipedia":
-            search = WikipediaProvider(values["app"]["language"])
+            search = WikipediaProvider(values["app"]["language"], log_dir=self.log_dir)
         else:
             raise ValueError(f"Unknown search provider: {search_cfg['provider']}")
         fetch_cfg = values["fetch"]
